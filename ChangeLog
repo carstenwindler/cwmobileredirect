@@ -1,0 +1,103 @@
+2014-09-29 Carsten Windler  <carsten@carstenwindler.de>
+	* Version 1.4.4 released:
+		- Feature #61801: Ensure compatibility with Typo3 6.2.x
+
+2014-01-02 Carsten Windler  <carsten@windler-online.de>
+    * Version 1.4.3 released:
+        - Attention: minimum PHP version raised to 5.3.0 due to use namespaces in the update script
+        - Bug #34941: Only works if enabled debug or enable use_typoscript
+        - Bug #54692: Redirection to mobile or standard URL not working when both URLs are too similar
+        - Feature #50782: do not redirect exceptions (thanks to Stano Paska!)
+        - Feature #53371: Default regexp updated from http://detectmobilebrowsers.com/ (9 September 2013)
+        - Feature #54691: Extension Manager Update Script for mobile detection RegExps
+        - Feature #54693: Ensure compatibility with Typo3 6.x
+        
+
+
+2011-12-18 Carsten Windler  <info@windler-consulting.de>
+    * Version 1.4.2 released:
+        - Default regexp updated from http://detectmobilebrowsers.com/ (now 22 August 2011)
+        - Change/Bugfix: user_isMobileForced now returns true, if mobile is forced or if a real mobile is used (thanks to Bert Hiddink)
+        - Change: Do not redirect if typo3conf directory is accessed (credits go to Roman Büchler)
+        - Documentation updated
+    
+    
+2011-08-11 Carsten Windler  <info@windler-consulting.de> 
+    * Version 1.4.1 released:
+        - Bugfix: noMobile switch not working correctly    
+
+
+2011-07-27 Carsten Windler  <info@windler-consulting.de> 
+    * Version 1.4.0 released:
+        - New feature: maintain_url (see configuration)
+        - New feature: isMobileForced()/isMobile() and the user functions user_isMobileForced()/user_isMobile() now accept multiple browser descriptions
+        - Documentation update (new features, typo fixed)
+
+
+2011-04-18 Carsten Windler  <info@windler-consulting.de> 
+    * Version 1.3.0 released:
+        - New feature: debug modus
+        - Bugfix: use HTTP_HOST instead of SERVER_NAME to get the actual URL
+        - Minimum requirements set to Typo3 4.3.0
+
+
+2011-01-31 Carsten Windler  <info@windler-consulting.de>                                
+    * Version 1.2.1 released:
+        - The configuration fields are now in one section again, so please be sure to press “Update” once more after updating to this release, 
+          so all values are correctly saved. 
+          
+          Sorry for any problems caused!
+
+          
+2011-01-23 Carsten Windler  <info@windler-consulting.de>      
+
+    * Version 1.2.0 released:
+        - Multi domain setups are now supported!
+        - Configuration is now changeable via TypoScript
+        - Please note that the class name has changed to tx_cwmobileredirect (formerly tx_mobileredirect).
+        - Documentation update (new features)
+        
+
+2011-01-11 Carsten Windler  <info@windler-consulting.de>      
+
+    * Version 1.1.1 released:
+        - Extension is now in available TYPO3 Forge! Check out http://forge.typo3.org/projects/extension-cwmobileredirect/repository
+        - Bugfix #11661 (added userfuncs user_isMobileForced and user_isStandardForced to solve issue)
+        - Bugfix #12113 (problem with pageNotFound_handling, see new configuration parameter "add_value_to_params")
+        - Bugfix #12114 (Calling mobile URL directly if standard mode is forced doesn't redirect to standard URL)
+        - Obsolete configuration parameter removed: cookie_url
+        - Documentation update (new userfuncs)    
+
+        
+2010-12-07 Carsten Windler  <info@windler-consulting.de> 
+
+    * Version 1.1.0 released:
+        - Check usage of mobile device using TypoScript
+        - Usage the mobile detection in your own extension now easily possible
+        - Code refactoring
+        - Documentation update (new features)
+
+
+2010-11-22 Carsten Windler  <info@windler-consulting.de>
+
+    * Version 1.0.3 released:    
+        - Improved URL parsing for more flexibility in how to address your mobile version
+        - Documentation updates (added Basic usage & Troubleshooting section, other minor documentation amendments)
+        - Fixed bug when not using the default cookie name
+
+
+2010-10-30 Carsten Windler  <info@windler-consulting.de>
+
+    * Version 1.0.2 released:
+        - Documentation added
+        - Bugfix
+
+
+2010-10-03 Carsten Windler  <info@windler-consulting.de>
+
+    * Version 1.0.1 released (bugfix)
+
+
+2010-10-01 Carsten Windler  <info@windler-consulting.de>
+
+    * 1.0.0 Initial release
