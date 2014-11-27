@@ -386,6 +386,18 @@ class tx_cwmobileredirect
      */
     public function checkRedirect()
     {
+		// if the mobile version was forced we set / update the cookie
+		// and do not care about redirects
+		if($this->isMobileForced()) {
+			$this->setExtensionCookie(self::MOBILEREDIRECT_COOKIE_MOBILE);
+		}
+
+		// if the standard version was forced we set / update the cookie
+		// and do not care about redirects
+		if($this->isStandardForced()) {
+			$this->setExtensionCookie(self::MOBILEREDIRECT_COOKIE_STANDARD);
+		}
+
         // Don't do anything in this case
         if(!$this->isMobileUrlRequested() &&
             !$this->isStandardUrlRequested()
