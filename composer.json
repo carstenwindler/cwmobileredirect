@@ -1,0 +1,6 @@
+{
+	"name": "intera-typo3-extension/cwmobileredirect",
+	"description": "Your all-in-one mobile device detection and redirection solution! Detects mobile browsers and redirects to other Typo3 sites in your setup (most likely optimized for mobiles). Allows to easily switch back to the normal version, with Cookie support to remember the users choice. The browser detection can be access via TypoScript or in your own extension.",
+	"type": "typo3-cms-extension",
+	"version": "1.4.3"
+}

@@ -22,6 +22,8 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\HttpUtility;
 
 /**
  * Simple user_func that uses tx_mobileredirect to determine if the
@@ -386,6 +388,18 @@ class tx_cwmobileredirect
      */
     public function checkRedirect()
     {
+		// if the mobile version was forced we set / update the cookie
+		// and do not care about redirects
+		if($this->isMobileForced()) {
+			$this->setExtensionCookie(self::MOBILEREDIRECT_COOKIE_MOBILE);
+		}
+
+		// if the standard version was forced we set / update the cookie
+		// and do not care about redirects
+		if($this->isStandardForced()) {
+			$this->setExtensionCookie(self::MOBILEREDIRECT_COOKIE_STANDARD);
+		}
+
         // Don't do anything in this case
         if(!$this->isMobileUrlRequested() &&
             !$this->isStandardUrlRequested()
@@ -400,7 +414,7 @@ class tx_cwmobileredirect
         // don't redirect in case of configured exceptions
 		// e.g. (rest\/news|events)|typo3conf
         if (!empty($this->_conf['redirect_exceptions']) &&
-			preg_match('/'.$this->_conf['redirect_exceptions'].'/', t3lib_div::getIndpEnv('REQUEST_URI')))
+			preg_match('/'.$this->_conf['redirect_exceptions'].'/', GeneralUtility::getIndpEnv('REQUEST_URI')))
         {
             return;
         }
@@ -539,7 +553,7 @@ class tx_cwmobileredirect
 
         $this->writeDebugLogArray();
 
-        t3lib_utility_Http::redirect($this->protocol . $url . $urlParam, $this->_conf['httpStatus']);
+        HttpUtility::redirect($this->protocol . $url . $urlParam, $this->_conf['httpStatus']);
     }
 
 
@@ -553,7 +567,7 @@ class tx_cwmobileredirect
     {
         // set default HTTP Status code, if not defined
         if ('' == $this->_conf['httpStatus'] || !defined('t3lib_utility_Http::'. $this->_conf['httpStatus'])) {
-            $this->_conf['httpStatus'] = t3lib_utility_Http::HTTP_STATUS_303;
+            $this->_conf['httpStatus'] = HttpUtility::HTTP_STATUS_303;
         } else {
             $this->_conf['httpStatus'] = constant('t3lib_utility_Http::'. $this->_conf['httpStatus']);
         }
@@ -700,7 +714,7 @@ class tx_cwmobileredirect
         // Thanks a lot!
 
         if(!$useragent) {
-            $useragent = t3lib_div::getIndpEnv('HTTP_USER_AGENT');
+            $useragent = GeneralUtility::getIndpEnv('HTTP_USER_AGENT');
         }
 
         // Run detection - if true, store status
@@ -736,7 +750,7 @@ class tx_cwmobileredirect
     protected function detectMobileBrowser($useragent = NULL)
     {
         if(!$useragent) {
-            $useragent = t3lib_div::getIndpEnv('HTTP_USER_AGENT');
+            $useragent = GeneralUtility::getIndpEnv('HTTP_USER_AGENT');
         }
 
         // go through the array of known mobile browsers and check
