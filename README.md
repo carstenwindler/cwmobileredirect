@@ -1,4 +1,4 @@
 cwmobileredirect
 ================
 
-http://forge.typo3.org/projects/extension-cwmobileredirect
+https://github.com/carstenwindler/cwmobileredirect

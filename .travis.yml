@@ -1,0 +1,67 @@
+language: php
+
+php:
+  - 5.5
+  - 5.6
+  - 7
+
+env:
+  - TYPO3_VERSION="^6.2.0"
+  - TYPO3_VERSION="^7.6.0"
+
+notifications:
+  email:
+    - carsten@carstenwindler.de
+
+matrix:
+  exclude:
+    - php: 7
+      env: TYPO3_VERSION="^6.2.0"
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - parallel
+
+cache:
+  directories:
+    - $HOME/.composer/cache
+
+before_install:
+  # we keep xdebug because of the code coverage
+  # - phpenv config-rm xdebug.ini
+  - composer self-update
+  - if [ "$GITHUB_COMPOSER_AUTH" ]; then composer config -g github-oauth.github.com $GITHUB_COMPOSER_AUTH; fi
+  - composer install --prefer-source --no-interaction --dev
+
+before_script:
+  - composer require typo3/cms="$TYPO3_VERSION"
+  # Restore composer.json
+  - git checkout composer.json
+  - export TYPO3_PATH_WEB=$PWD/.Build/Web
+
+script:
+  - >
+    echo;
+    echo "Running unit tests";
+    .Build/bin/phpunit -c Tests/Build/UnitTests.xml
+
+  - >
+    echo;
+    echo "Running php lint";
+    find . -name \*.php ! -path "./.Build/*" | parallel --gnu php -d display_errors=stderr -l {} > /dev/null \;
+
+  #- >
+  #  echo;
+  #  export typo3DatabaseName="typo3";
+  #  export typo3DatabaseHost="localhost";
+  #  export typo3DatabaseUsername="root";
+  #  export typo3DatabasePassword="";
+  #  find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo "Running functional test suite {}"; .Build/bin/phpunit --colors  -c .Build/vendor/typo3/cms/typo3/sysext/core/Build/FunctionalTests.xml {}'
+
+  - >
+    echo;
+    echo "Running code sniffer";
+    .Build/bin/phpcs --standard=PSR2 Classes
