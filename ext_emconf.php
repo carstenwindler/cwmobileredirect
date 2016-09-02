@@ -17,7 +17,7 @@ $EM_CONF[$_EXTKEY] = array (
         'back to the normal version, with Cookie support to remember the users choice. The browser detection can ' .
         'be access via TypoScript or in your own extension.',
     'category' => 'fe',
-    'version' => '1.4.4',
+    'version' => '1.5.0',
     'state' => 'stable',
     'uploadfolder' => 0,
     'createDirs' => '',

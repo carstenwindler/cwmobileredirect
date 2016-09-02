@@ -1,4 +1,4 @@
-2016-05-03 Carsten Windler  <carsten@carstenwindler.de>
+2016-09-01 Carsten Windler  <carsten@carstenwindler.de>
 	* Version 1.5.0 released:
 		- Added support for Typo3 7.x
 		- No features added, support for Typo3 4.x dropped. Please use version 1.4.4 if you still use 4.x!
