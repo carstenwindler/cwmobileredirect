@@ -37,7 +37,7 @@ Thanks to cwmobileredirect we know that you want this page to be displayed in mo
  
 function user_isMobileForced($browserId = null)
 {
-	$forced = (Main::getInstance()->isMobileForced() || Main::getInstance()->isMobile());
+    $forced = (Main::getInstance()->isMobileForced() || Main::getInstance()->isMobile());
 
     if ($forced && !empty($browserId)) {
         if (strpos($browserId, Main::getInstance()->getDetectedMobileBrowser()) !== false) {
