@@ -1,4 +1,5 @@
 <?php
+use CarstenWindler\Cwmobileredirect\Main;
 
 /**
  * Simple user_func that uses tx_mobileredirect to determine if the
@@ -32,12 +33,14 @@ Thanks to cwmobileredirect we know that you want this page to be displayed in mo
  * @return boolean - true mobile mode is forced by GET parameter or by Cookie
  *
  */
+
+ 
 function user_isMobileForced($browserId = null)
 {
-	$forced = (\CarstenWindler\Cwmobileredirect\Main::getInstance()->isMobileForced() || \CarstenWindler\Cwmobileredirect\Main::getInstance()->isMobile());
+	$forced = (Main::getInstance()->isMobileForced() || Main::getInstance()->isMobile());
 
     if ($forced && !empty($browserId)) {
-        if (strpos($browserId, \CarstenWindler\Cwmobileredirect\Main::getInstance()->getDetectedMobileBrowser()) !== false) {
+        if (strpos($browserId, Main::getInstance()->getDetectedMobileBrowser()) !== false) {
             return true;
         } else {
             return false;
@@ -65,7 +68,7 @@ Thanks to cwmobileredirect we know that you want this page to be displayed in mo
  */
 function user_isStandardForced()
 {
-    return \CarstenWindler\Cwmobileredirect\Main::getInstance()->isStandardForced();
+    return Main::getInstance()->isStandardForced();
 }
 
 /**
@@ -97,12 +100,12 @@ Thanks to cwmobileredirect we know that you called this page using a mobile!
 function user_isMobile($browserId = null)
 {
     if (!empty($browserId)) {
-        if (strpos($browserId, \CarstenWindler\Cwmobileredirect\Main::getInstance()->getDetectedMobileBrowser()) !== false) {
+        if (strpos($browserId, Main::getInstance()->getDetectedMobileBrowser()) !== false) {
             return true;
         } else {
             return false;
         }
     } else {
-        return \CarstenWindler\Cwmobileredirect\Main::getInstance()->isMobile();
+        return Main::getInstance()->isMobile();
     }
 }
