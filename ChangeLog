@@ -1,3 +1,9 @@
+2016-09-01 Carsten Windler  <carsten@carstenwindler.de>
+	* Version 1.5.0 released:
+		- Added support for Typo3 7.x
+		- No features added, support for Typo3 4.x dropped. Please use version 1.4.4 if you still use 4.x!
+		- However some renaming took place
+
 2014-12-03 Hannes Lau <office@hanneslau.de>
 	* Prepare for next release
         - A standard cookie will not force a redirect from the mobile to the standard version anymore. Instead the cookies just serve to prevent an automatic redirection from standard to mobile. 
@@ -16,8 +22,6 @@
         - Feature #53371: Default regexp updated from http://detectmobilebrowsers.com/ (9 September 2013)
         - Feature #54691: Extension Manager Update Script for mobile detection RegExps
         - Feature #54693: Ensure compatibility with Typo3 6.x
-        
-
 
 2011-12-18 Carsten Windler  <info@windler-consulting.de>
     * Version 1.4.2 released:
@@ -25,26 +29,22 @@
         - Change/Bugfix: user_isMobileForced now returns true, if mobile is forced or if a real mobile is used (thanks to Bert Hiddink)
         - Change: Do not redirect if typo3conf directory is accessed (credits go to Roman Büchler)
         - Documentation updated
-    
-    
+
 2011-08-11 Carsten Windler  <info@windler-consulting.de> 
     * Version 1.4.1 released:
         - Bugfix: noMobile switch not working correctly    
 
-
-2011-07-27 Carsten Windler  <info@windler-consulting.de> 
+2011-07-27 Carsten Windler  <info@windler-consulting.de>
     * Version 1.4.0 released:
         - New feature: maintain_url (see configuration)
         - New feature: isMobileForced()/isMobile() and the user functions user_isMobileForced()/user_isMobile() now accept multiple browser descriptions
         - Documentation update (new features, typo fixed)
-
 
 2011-04-18 Carsten Windler  <info@windler-consulting.de> 
     * Version 1.3.0 released:
         - New feature: debug modus
         - Bugfix: use HTTP_HOST instead of SERVER_NAME to get the actual URL
         - Minimum requirements set to Typo3 4.3.0
-
 
 2011-01-31 Carsten Windler  <info@windler-consulting.de>                                
     * Version 1.2.1 released:
@@ -53,7 +53,6 @@
           
           Sorry for any problems caused!
 
-          
 2011-01-23 Carsten Windler  <info@windler-consulting.de>      
 
     * Version 1.2.0 released:
@@ -62,8 +61,7 @@
         - Please note that the class name has changed to tx_cwmobileredirect (formerly tx_mobileredirect).
         - Documentation update (new features)
         
-
-2011-01-11 Carsten Windler  <info@windler-consulting.de>      
+2011-01-11 Carsten Windler  <info@windler-consulting.de>
 
     * Version 1.1.1 released:
         - Extension is now in available TYPO3 Forge! Check out http://forge.typo3.org/projects/extension-cwmobileredirect/repository
@@ -73,7 +71,6 @@
         - Obsolete configuration parameter removed: cookie_url
         - Documentation update (new userfuncs)    
 
-        
 2010-12-07 Carsten Windler  <info@windler-consulting.de> 
 
     * Version 1.1.0 released:
@@ -82,7 +79,7 @@
         - Code refactoring
         - Documentation update (new features)
 
-
+                y
 2010-11-22 Carsten Windler  <info@windler-consulting.de>
 
     * Version 1.0.3 released:    
@@ -90,18 +87,15 @@
         - Documentation updates (added Basic usage & Troubleshooting section, other minor documentation amendments)
         - Fixed bug when not using the default cookie name
 
-
 2010-10-30 Carsten Windler  <info@windler-consulting.de>
 
     * Version 1.0.2 released:
         - Documentation added
         - Bugfix
 
-
 2010-10-03 Carsten Windler  <info@windler-consulting.de>
 
     * Version 1.0.1 released (bugfix)
-
 
 2010-10-01 Carsten Windler  <info@windler-consulting.de>
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="../../.Build/Web/typo3/sysext/core/Build/UnitTestsBootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnError="false"
+         stopOnFailure="false"
+         stopOnIncomplete="false"
+         stopOnSkipped="false">
+
+    <php>
+        <env name="TYPO3_PATH_WEB" value=".Build/Web"/>
+    </php>
+
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../../Classes</directory>
+        </whitelist>
+    </filter>
+
+    <testsuites>
+        <testsuite name="EXT:cwenvbanner tests">
+            <directory>../Unit/</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>

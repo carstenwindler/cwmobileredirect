@@ -1,9 +1,11 @@
 <?php
 
+namespace CarstenWindler\Cwmobileredirect;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011-2014 Carsten Windler (carsten@windler-online.de)
+ *  (c) 2011-2016 Carsten Windler (carsten@carstenwindler.de)
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,118 +25,8 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-/**
- * Simple user_func that uses tx_mobileredirect to determine if the
- * page should be displayed in mobile mode, regardless of the used device
- * (i.e. the Cookie and/or the GET parameters are taken into account)
- *
- * Examples:
- *
- * [userFunc = user_isMobileForced]
- *    page.config.headerComment (
-Thanks to cwmobileredirect we know that you want this page to be displayed in mobile mode!
- *    )
- * [end]
- *
- * [userFunc = user_isMobileForced(Android)]
- *    page.config.headerComment (
- *       Thanks to cwmobileredirect we know that you want this page to be displayed in mobile mode,
- *       and Android is used!
- *    )
- * [end]
- *
- * [userFunc = user_isMobileForced(Safari,Android)]
- *    page.config.headerComment (
- *       Thanks to cwmobileredirect we know that hip devices are supported!
- *    )
- * [end]
- *
- * @param string $browserId - (Optional) if set, it is checked if the detected browser equals the given Id
- *                            Note: multiple ids are possible, just pass them comma-separated
- *
- * @return boolean - true mobile mode is forced by GET parameter
- *
- */
-function user_isMobileForced($browserId = null)
-{
-    $forced = (tx_cwmobileredirect::getInstance()->isMobileForced() || tx_cwmobileredirect::getInstance()->isMobile());
-
-    if($forced && !empty($browserId)) {
-        if(strpos($browserId, tx_cwmobileredirect::getInstance()->getDetectedMobileBrowser()) !== false) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return $forced;
-    }
-}
-
-
-
-/**
- * Simple user_func that uses tx_mobileredirect to determine if the
- * page should be displayed in standard mode, regardless of the used device
- * (i.e. the Cookie and/or the GET parameters are taken into account)
- *
- * Examples:
- *
- * [userFunc = user_isStandardForced]
- *    page.config.headerComment (
-Thanks to cwmobileredirect we know that you want this page to be displayed in mobile mode!
- *    )
- * [end]
- *
- * @return boolean - true mobile mode is forced by GET parameter
- *
- */
-function user_isStandardForced()
-{
-    return tx_cwmobileredirect::getInstance()->isStandardForced();
-}
-
-
-
-/**
- * Simple user_func that uses tx_mobileredirect to determine if mobile
- * browser is used or not, or to detect if a special browser is used
- *
- * Examples:
- *
- * [userFunc = user_isMobile]
- *    page.config.headerComment (
-Thanks to cwmobileredirect we know that you called this page using a mobile!
- *    )
- * [end]
- *
- * [userFunc = user_isMobile(Safari)]
- *    page.config.headerComment (
- *      Thanks to cwmobileredirect we know that you called this page using a Safari mobile!
- *    )
- * [end]
- *
- * Pls see the constants MOBILEREDIRECT_USERAGENT_* below to find out which Ids are recognized!
- *
- * @param string $browserId - (Optional) if set, it is checked if the detected browser equals the given Id
- *                               Note: multiple ids are possible, just pass them comma-separated
- *
- * @return boolean - true if current browser is detected as a mobile, false otherwise
- *
- */
-function user_isMobile($browserId = null)
-{
-    if(!empty($browserId)) {
-        if(strpos($browserId, tx_cwmobileredirect::getInstance()->getDetectedMobileBrowser()) !== FALSE) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return tx_cwmobileredirect::getInstance()->isMobile();
-    }
-}
-
-
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\HttpUtility;
 
 /**
  * Detect mobile device and redirect
@@ -144,7 +36,7 @@ function user_isMobile($browserId = null)
  * @author  Carsten Windler (carsten@windler-online.de)
  *
  */
-class tx_cwmobileredirect
+class Main
 {
     /**
      * User agent constants
@@ -172,21 +64,21 @@ class tx_cwmobileredirect
 
     /**
      * Instance
-     * @var tx_cwmobileredirect
+     * @var Main
      */
-    protected static $_instance         = null;
+    protected static $instance         = null;
 
     /**
      * The configuration array
      * @var array
      */
-    protected $_conf                    = null;
+    protected $conf                    = null;
 
     /**
      * Debug log collector
      * @var array
      */
-    protected $_debugLogArray           = null;
+    protected $debugLogArray           = null;
 
     /**
      * The requests URL
@@ -240,88 +132,79 @@ class tx_cwmobileredirect
         self::MOBILEREDIRECT_USERAGENT_NETFRONT      => 'NetFront'
     );
 
-
-
     /**
      * Returns instance of this model
      *
-     * @return tx_cwmobileredirect
+     * @return Main
      */
     public static function getInstance()
     {
-        if (!isset(self::$_instance)) {
+        if (!isset(self::$instance)) {
             $c = __CLASS__;
-            self::$_instance = new $c;
+            self::$instance = new $c;
         }
 
-        return self::$_instance;
+        return self::$instance;
     }
-
-
 
     /**
      * Constructor
      *
-     * @return tx_cwmobileredirect
+     * @return Main
      */
     public function __construct()
     {
         global $TYPO3_CONF_VARS;
 
-        self::$_instance    = $this;
+        self::$instance    = $this;
 
-        if(isset($TYPO3_CONF_VARS['EXT']['extConf'][$this->extKey])) {
-            $this->_conf = unserialize($TYPO3_CONF_VARS['EXT']['extConf'][$this->extKey]);
+        if (isset($TYPO3_CONF_VARS['EXT']['extConf'][$this->extKey])) {
+            $this->conf = unserialize($TYPO3_CONF_VARS['EXT']['extConf'][$this->extKey]);
         }
 
         // @TODO error_log path & file configurable
 
-        if(!$this->_conf) {
+        if (!$this->conf) {
             $this->debugLog('Configuration array not loaded!');
 
             // we need this to enable debug logging into the header comment!
-            $this->_conf['use_typoscript'] = 1;
+            $this->conf['use_typoscript'] = 1;
         }
 
         $this->selfUrl = $this->getSelfUrl();
 
         // Configuration check, if debugging is activated
-        if($this->_conf['debug']) {
+        if ($this->conf['debug']) {
             // try to create log file, if not existing
-            if(file_exists($this->_conf['error_log'])) {
-                touch($this->_conf['error_log']);
+            if (file_exists($this->conf['error_log'])) {
+                touch($this->conf['error_log']);
             }
 
             // check if we can use the log file
-            if(!is_writable($this->_conf['error_log']))
-            {
+            if (!is_writable($this->conf['error_log'])) {
                 $this->debugLog('error_log file given, but not writable');
 
-                $this->_conf['error_log'] = null;
+                $this->conf['error_log'] = null;
             }
 
             // @TODO configuration sanitation
         }
 
-        $this->debugLog(print_r($this->_conf,1));
+        $this->debugLog(print_r($this->conf, 1));
 
         $this->debugLog($this->extKey . ' loaded successfully');
     }
 
-
-
     /**
      * Destructor
      *
-	 * @return void
+     * @return void
      */
     public function __destruct()
     {
         // Write the debug log before destruction
         $this->writeDebugLogArray();
     }
-
-
 
     /**
      * First entry point - is always called by preprocessRequest hook to check usage of Typo Script
@@ -338,16 +221,16 @@ class tx_cwmobileredirect
         // Check if TypoScript usage is inactive
         // If debugging is active, do not unset the second entry point
         // because we need it for the logging
-        if(empty($this->_conf['use_typoscript']) && empty($this->_conf['debug'])) {
+        if (empty($this->conf['use_typoscript']) && empty($this->conf['debug'])) {
             // Remove hook to second entry point because we don't want to parse TS
-            unset($TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['configArrayPostProc']['tx_mobileredirect']);
+            unset(
+                $TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['configArrayPostProc']['tx_mobileredirect']
+            );
             $this->checkRedirect();
         }
 
         // if active, do nothing here - the action continues in secondEntryPoint then!
     }
-
-
 
     /**
      * Second entry point - is called by configArrayPostProc hook if TypoScript usage is active
@@ -355,28 +238,25 @@ class tx_cwmobileredirect
      * We merge the TypoScript setup with the configuration array here
      *
      * @param array  $params - the params from the configArrayPostProc hook
-     * @param object $ref    - a reference to the parent object
      *
      * @return void
      *
      */
-    public function secondEntryPoint(&$params, &$ref)
+    public function secondEntryPoint(&$params)
     {
         // Only log this if typoscript usage is activated
         // otherwise this entry point is only called because debugging is enabled
-        if(!empty($this->_conf['use_typoscript'])) {
+        if (!empty($this->conf['use_typoscript'])) {
             $this->debugLog('Second entry point called');
         }
 
         // Merge TS configuration with other configuration, if available
-        if(isset($params['config']['tx_cwmobileredirect.'])) {
-            $this->_conf = array_merge($this->_conf, $params['config']['tx_cwmobileredirect.']);
+        if (isset($params['config']['tx_cwmobileredirect.'])) {
+            $this->conf = array_merge($this->conf, $params['config']['tx_cwmobileredirect.']);
         }
 
         $this->checkRedirect();
     }
-
-
 
     /**
      * Check if redirect conditions apply
@@ -387,7 +267,7 @@ class tx_cwmobileredirect
     public function checkRedirect()
     {
         // Don't do anything in this case
-        if(!$this->isMobileUrlRequested() &&
+        if (!$this->isMobileUrlRequested() &&
             !$this->isStandardUrlRequested()
         ) {
             $this->debugLog('Neither mobile nor standard URL requested');
@@ -398,21 +278,21 @@ class tx_cwmobileredirect
         $this->setHttpStatus();
 
         // don't redirect in case of configured exceptions
-		// e.g. (rest\/news|events)|typo3conf
-        if (!empty($this->_conf['redirect_exceptions']) &&
-			preg_match('/'.$this->_conf['redirect_exceptions'].'/', t3lib_div::getIndpEnv('REQUEST_URI')))
-        {
+        // e.g. (rest\/news|events)|typo3conf
+        if (!empty($this->conf['redirect_exceptions']) &&
+            preg_match('/' . $this->conf['redirect_exceptions'] . '/', GeneralUtility::getIndpEnv('REQUEST_URI'))
+        ) {
             return;
         }
 
         // check if mobile version is forced
-        if($this->isMobileForced()) {
+        if ($this->isMobileForced()) {
             $this->debugLog('Mobile version forced');
 
             $this->setExtensionCookie(self::MOBILEREDIRECT_COOKIE_MOBILE);
 
             // Check if we need to redirect to the mobile page
-            if(!$this->isMobileUrlRequested()) {
+            if (!$this->isMobileUrlRequested()) {
                 $this->redirectToMobileUrl();
             }
 
@@ -420,13 +300,13 @@ class tx_cwmobileredirect
         }
 
         // check if standard version is forced
-        if($this->isStandardForced()) {
+        if ($this->isStandardForced()) {
             $this->debugLog('Standard version forced');
 
             $this->setExtensionCookie(self::MOBILEREDIRECT_COOKIE_STANDARD);
 
             // Check if we need to redirect to the standard page
-            if(!$this->isStandardUrlRequested()) {
+            if (!$this->isStandardUrlRequested()) {
                 $this->redirectToStandardUrl();
             }
 
@@ -434,21 +314,19 @@ class tx_cwmobileredirect
         }
 
         // end here if mobile detection disabled or mobile URL is already used
-        if(!$this->_conf['detection_enabled'] || $this->isMobileUrlRequested()) {
+        if (!$this->conf['detection_enabled'] || $this->isMobileUrlRequested()) {
             $this->debugLog('Mobile detection disabled or mobile URL already used');
 
             return;
         }
 
         // here the real detection begins
-        if($this->_conf['redirection_enabled'] && !$this->isStandardAccepted() && $this->detectMobile()) {
+        if ($this->conf['redirection_enabled'] && !$this->isStandardAccepted() && $this->detectMobile()) {
             $this->redirectToMobileUrl(false);
         }
 
         return;
     }
-
-
 
     /**
      * Redirect to mobile URL
@@ -459,14 +337,12 @@ class tx_cwmobileredirect
      */
     public function redirectToMobileUrl($addParam = true)
     {
-        if($addParam) {
-            $this->redirectTo($this->_conf['mobile_url'], $this->_conf['is_mobile_name']);
+        if ($addParam) {
+            $this->redirectTo($this->conf['mobile_url'], $this->conf['is_mobile_name']);
         } else {
-            $this->redirectTo($this->_conf['mobile_url']);
+            $this->redirectTo($this->conf['mobile_url']);
         }
     }
-
-
 
     /**
      * Redirect to standard URL
@@ -477,46 +353,45 @@ class tx_cwmobileredirect
      */
     public function redirectToStandardUrl($addParam = true)
     {
-        if($addParam) {
-            $this->redirectTo($this->_conf['standard_url'], $this->_conf['no_mobile_name']);
+        if ($addParam) {
+            $this->redirectTo($this->conf['standard_url'], $this->conf['no_mobile_name']);
         } else {
-            $this->redirectTo($this->_conf['standard_url']);
+            $this->redirectTo($this->conf['standard_url']);
         }
     }
 
-
-	/**
-	 * Sets the header location to redirect to given URL and exits directly afterwards
-	 *
-	 * @param string $url      - The URL to redirect to
-	 * @param bool   $addParam - If set, this param will be added (e.g. www.url.com?paramName)
-	 *
-	 * @return void
-	 */
+    /**
+     * Sets the header location to redirect to given URL and exits directly afterwards
+     *
+     * @param string $url      - The URL to redirect to
+     * @param bool   $addParam - If set, this param will be added (e.g. www.url.com?paramName)
+     *
+     * @return void
+     */
     protected function redirectTo($url, $addParam = false)
     {
         // add =1 to param if needed to solve problems with RealUrl and pageHandling
         $urlParam = '';
 
         // maintain requested URI, if available and configured
-        if(!empty($this->_conf['maintain_url']) && !empty($this->requestParams)) {
+        if (!empty($this->conf['maintain_url']) && !empty($this->requestParams)) {
             $url .= $this->requestParams;
         }
 
         // Add params
-        if($addParam) {
-            if(!is_array($addParam)) {
+        if ($addParam) {
+            if (!is_array($addParam)) {
                 $addParam = array($addParam);
             }
 
-            foreach($addParam as $param) {
+            foreach ($addParam as $param) {
                 // check if param is already given, skip if yes
-                if(strpos($url, $param) !== FALSE) {
+                if (strpos($url, $param) !== false) {
                     continue;
                 }
 
                 // is it the first parameter?
-                if(strpos($url, "?") !== FALSE) {
+                if (strpos($url, "?") !== false) {
                     $urlParam .= "&";
                 } else {
                     $urlParam .= "?";
@@ -525,13 +400,13 @@ class tx_cwmobileredirect
                 $urlParam .= $param;
 
                 // add =1 to param if needed to solve problems with RealUrl and pageHandling
-                if(!empty($this->_conf['add_value_to_params'])) {
+                if (!empty($this->conf['add_value_to_params'])) {
                     $urlParam .= '=1';
                 }
             }
         }
 
-        if(strpos($url, "/") === FALSE) {
+        if (strpos($url, "/") === false) {
             $url .= "/";
         }
 
@@ -539,10 +414,8 @@ class tx_cwmobileredirect
 
         $this->writeDebugLogArray();
 
-        t3lib_utility_Http::redirect($this->protocol . $url . $urlParam, $this->_conf['httpStatus']);
+        HttpUtility::redirect($this->protocol . $url . $urlParam, $this->conf['httpStatus']);
     }
-
-
 
     /**
      * Set the HTTP status used for redirects
@@ -552,16 +425,14 @@ class tx_cwmobileredirect
     protected function setHttpStatus()
     {
         // set default HTTP Status code, if not defined
-        if ('' == $this->_conf['httpStatus'] || !defined('t3lib_utility_Http::'. $this->_conf['httpStatus'])) {
-            $this->_conf['httpStatus'] = t3lib_utility_Http::HTTP_STATUS_303;
+        if ('' == $this->conf['httpStatus'] || !defined('t3lib_utility_Http::'. $this->conf['httpStatus'])) {
+            $this->conf['httpStatus'] = HttpUtility::HTTP_STATUS_303;
         } else {
-            $this->_conf['httpStatus'] = constant('t3lib_utility_Http::'. $this->_conf['httpStatus']);
+            $this->conf['httpStatus'] = constant('t3lib_utility_Http::'. $this->conf['httpStatus']);
         }
 
-        $this->debugLog('Setting HTTP status', array('http_status' => $this->_conf['httpStatus']));
+        $this->debugLog('Setting HTTP status', array('http_status' => $this->conf['httpStatus']));
     }
-
-
 
     /**
      * Set the extension cookie
@@ -572,21 +443,19 @@ class tx_cwmobileredirect
      */
     protected function setExtensionCookie($cookieValue)
     {
-        if($this->_conf['use_cookie']) {
+        if ($this->conf['use_cookie']) {
             $this->debugLog('Setting cookie', array('cookie_value' => $cookieValue));
             return setcookie(
-                $this->_conf['cookie_name'], 
+                $this->conf['cookie_name'], 
                 $cookieValue, 
-                time()+$this->_conf['cookie_lifetime'], 
+                time()+$this->conf['cookie_lifetime'], 
                 "/", // path
-                trim($this->_conf['cookie_domain']) // domain
+                trim($this->conf['cookie_domain']) // domain
             );
         } else {
             return false;
         }
     }
-
-
 
     /**
      * Determine if the requested URL is the mobile one
@@ -595,10 +464,8 @@ class tx_cwmobileredirect
      */
     public function isMobileUrlRequested()
     {
-        return (strpos($this->selfUrl, $this->_conf['mobile_url']) === 0);
+        return (strpos($this->selfUrl, $this->conf['mobile_url']) === 0);
     }
-
-
 
     /**
      * Determine if the requested URL is the standard one
@@ -607,10 +474,8 @@ class tx_cwmobileredirect
      */
     public function isStandardUrlRequested()
     {
-        return (strpos($this->selfUrl, $this->_conf['standard_url']) === 0);
+        return (strpos($this->selfUrl, $this->conf['standard_url']) === 0);
     }
-
-
 
     /**
      * Determine if the standard mode is forced
@@ -622,14 +487,12 @@ class tx_cwmobileredirect
     public function isStandardForced()
     {
         $this->debugLog("--------------- isStandardForced BEGIN  ----------------------");
-        $this->debugLog(print_r($_COOKIE,1));
-        $this->debugLog(print_r($_GET,1));
+        $this->debugLog(print_r($_COOKIE, 1));
+        $this->debugLog(print_r($_GET, 1));
         $this->debugLog("--------------- isStandardForced END ----------------------");
 
-        return (!empty($this->_conf['no_mobile_name']) && isset($_GET[$this->_conf['no_mobile_name']])) ? true : false;
+        return (!empty($this->conf['no_mobile_name']) && isset($_GET[$this->conf['no_mobile_name']])) ? true : false;
     }
-
-
 
     /**
      * Determine if the mobile mode is forced
@@ -640,11 +503,11 @@ class tx_cwmobileredirect
     public function isMobileForced()
     {
         $this->debugLog("--------------- isMobileForced BEGIN  ----------------------");
-        $this->debugLog(print_r($_COOKIE,1));
-        $this->debugLog(print_r($_GET,1));
+        $this->debugLog(print_r($_COOKIE, 1));
+        $this->debugLog(print_r($_GET, 1));
         $this->debugLog("--------------- isMobileForced END ----------------------");
 
-        return (!empty($this->_conf['is_mobile_name']) && isset($_GET[$this->_conf['is_mobile_name']])) ? true : false;
+        return (!empty($this->conf['is_mobile_name']) && isset($_GET[$this->conf['is_mobile_name']])) ? true : false;
     }
 
 
@@ -665,12 +528,10 @@ class tx_cwmobileredirect
             $this->isStandardForced()
             || (
                 !$this->isMobileForced()
-                && ((isset($_COOKIE[$this->_conf['cookie_name']]) && $_COOKIE[$this->_conf['cookie_name']] == self::MOBILEREDIRECT_COOKIE_STANDARD))
+                && ((isset($_COOKIE[$this->conf['cookie_name']]) && $_COOKIE[$this->conf['cookie_name']] == self::MOBILEREDIRECT_COOKIE_STANDARD))
             )
         ;
     }
-
-
 
     /**
      * Retrieve the requested URI
@@ -681,7 +542,7 @@ class tx_cwmobileredirect
      */
     private function getSelfUrl($prependProtocol = false)
     {
-        if(!isset($_SERVER['REQUEST_URI'])) {
+        if (!isset($_SERVER['REQUEST_URI'])) {
             $url = $_SERVER['PHP_SELF'];
         } else {
             $url = $_SERVER['REQUEST_URI'];
@@ -692,9 +553,13 @@ class tx_cwmobileredirect
 
         // store used protocol for later use
         $s              = empty($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? "s" : "";
-        $this->protocol = substr(strtolower($_SERVER["SERVER_PROTOCOL"]), 0, strpos(strtolower($_SERVER["SERVER_PROTOCOL"]), "/")) . $s . "://";
+        $this->protocol = substr(
+            strtolower($_SERVER["SERVER_PROTOCOL"]),
+            0,
+            strpos(strtolower($_SERVER["SERVER_PROTOCOL"]), "/")
+        ) . $s . "://";
 
-        if($prependProtocol) {
+        if ($prependProtocol) {
             $returnValue = $this->protocol . $_SERVER['HTTP_HOST'] . $url;
         } else {
             $returnValue = $_SERVER['HTTP_HOST'] . $url;
@@ -705,8 +570,6 @@ class tx_cwmobileredirect
         return $returnValue;
     }
 
-
-
     /**
      * Parse useragent to detect mobile
      *
@@ -715,22 +578,22 @@ class tx_cwmobileredirect
      * @return boolean - true if mobile detect, false otherwise
      *
      */
-    protected function detectMobile($useragent = NULL)
+    protected function detectMobile($useragent = null)
     {
         // Regular expressions for mobile detection by
         // http://detectmobilebrowser.com/
         // Thanks a lot!
 
-        if(!$useragent) {
-            $useragent = t3lib_div::getIndpEnv('HTTP_USER_AGENT');
+        if (!$useragent) {
+            $useragent = GeneralUtility::getIndpEnv('HTTP_USER_AGENT');
         }
 
         // Run detection - if true, store status
-        $rx1 = '/'. $this->_conf['regexp1'] .'/i';
-        $rx2 = '/'. $this->_conf['regexp2'] .'/i';
+        $rx1 = '/'. $this->conf['regexp1'] .'/i';
+        $rx2 = '/'. $this->conf['regexp2'] .'/i';
 
-        if((preg_match($rx1, $useragent) || preg_match($rx2, substr($useragent, 0, 4))))  {
-            $this->debugLog('Mobile device detected', 0, array('useragent' => $useragent));
+        if ((preg_match($rx1, $useragent) || preg_match($rx2, substr($useragent, 0, 4)))) {
+            $this->debugLog('Mobile device detected', array('useragent' => $useragent));
 
             $this->setIsMobile(true);
 
@@ -744,8 +607,6 @@ class tx_cwmobileredirect
         }
     }
 
-
-
     /**
      * Try to detect the used browser
      *
@@ -755,16 +616,16 @@ class tx_cwmobileredirect
      *
      * @return string|boolean - The browser name or false
      */
-    protected function detectMobileBrowser($useragent = NULL)
+    protected function detectMobileBrowser($useragent = null)
     {
-        if(!$useragent) {
-            $useragent = t3lib_div::getIndpEnv('HTTP_USER_AGENT');
+        if (!$useragent) {
+            $useragent = GeneralUtility::getIndpEnv('HTTP_USER_AGENT');
         }
 
         // go through the array of known mobile browsers and check
         // if the current useragent is recognized
-        foreach($this->knownMobileBrowsersArr as $browserId => $browserName) {
-            if(stripos($useragent, $browserId) !== FALSE) {
+        foreach ($this->knownMobileBrowsersArr as $browserId => $browserName) {
+            if (stripos($useragent, $browserId) !== false) {
                 $this->setDetectedMobileBrowser($browserId);
 
                 return $browserId;
@@ -774,8 +635,6 @@ class tx_cwmobileredirect
         return false;
     }
 
-
-
     /**
      * Returns the detected browser name
      *
@@ -784,14 +643,12 @@ class tx_cwmobileredirect
     public function getDetectedMobileBrowserName()
     {
         // Check if there is a name available for the detected user agent
-        if(isset($this->knownMobileBrowsersArr[$this->getDetectedMobileBrowser()]))  {
+        if (isset($this->knownMobileBrowsersArr[$this->getDetectedMobileBrowser()])) {
             return $this->knownMobileBrowsersArr[$this->getDetectedMobileBrowser()];
         }
 
         return false;
     }
-
-
 
     /**
      * Returns the detected browser (mainly just a part of the user agent)
@@ -803,14 +660,12 @@ class tx_cwmobileredirect
     public function getDetectedMobileBrowser()
     {
         // Run detection once, if not done already
-        if($this->detectedMobileBrowser === NULL) {
+        if ($this->detectedMobileBrowser === null) {
             $this->detectMobileBrowser();
         }
 
         return $this->detectedMobileBrowser;
     }
-
-
 
     /**
      * Setter for $detectedMobileBrowser
@@ -824,8 +679,6 @@ class tx_cwmobileredirect
         $this->detectedMobileBrowser = $detectedMobileBrowser;
     }
 
-
-
     /**
      * Setter for $isMobileStatus
      *
@@ -838,8 +691,6 @@ class tx_cwmobileredirect
         $this->isMobileStatus = $isMobile;
     }
 
-
-
     /**
      * Getter for $isMobile
      *
@@ -849,21 +700,19 @@ class tx_cwmobileredirect
      */
     public function isMobile()
     {
-        if($this->isMobileStatus === null) {
+        if ($this->isMobileStatus === null) {
             $this->detectMobile();
         }
 
         return $this->isMobileStatus;
     }
 
-
-
     /**
      * Debug Logging
      *
      * depends on debug-Setting in Configuration
      *
-     * @param string 		$messageString - The message
+     * @param string        $messageString - The message
      * @param array|boolean $dataVar       - An array to collect messages in
      *
      * @return void
@@ -871,15 +720,15 @@ class tx_cwmobileredirect
     protected function debugLog($messageString, $dataVar = false)
     {
         // debugging activated?
-        if($this->_conf && empty($this->_conf['debug'])) {
+        if ($this->conf && empty($this->conf['debug'])) {
             return;
         }
 
         // yes, collect message
-        if(is_array($dataVar)) {
+        if (is_array($dataVar)) {
             $tempArray = array();
 
-            foreach($dataVar as $key => $value) {
+            foreach ($dataVar as $key => $value) {
                 $tempArray[] = $key . ' => ' . $value;
             }
 
@@ -887,19 +736,17 @@ class tx_cwmobileredirect
         }
 
         // store this now, write it later (see writeDebugLogArray)
-        $this->_debugLogArray[] = $messageString;
+        $this->debugLogArray[] = $messageString;
 
         // classic error log
         $logString = $this->extKey . ': ' . $messageString;
 
-        if(!empty($this->_conf['error_log'])) {
-            error_log($logString . "\n", 3, $this->_conf['error_log']);
+        if (!empty($this->conf['error_log'])) {
+            error_log($logString . "\n", 3, $this->conf['error_log']);
         } else {
             error_log($logString);
         }
     }
-
-
 
     /**
      * Write the cumulated debug log into the header comment
@@ -909,20 +756,18 @@ class tx_cwmobileredirect
     protected function writeDebugLogArray()
     {
         // Anything to log?
-        if(!isset($this->_debugLogArray) || count($this->_debugLogArray) == 0) {
+        if (!isset($this->debugLogArray) || count($this->debugLogArray) == 0) {
             return;
         }
 
-        $log = $this->extKey . ' Debug log:' . "\n\r" . implode(",\r", $this->_debugLogArray);
+        $log = $this->extKey . ' Debug log:' . "\n\r" . implode(",\r", $this->debugLogArray);
 
         // write all log comments into the header
         $GLOBALS['TSFE']->config['config']['headerComment'] = $log;
 
         // free some memory
-        $this->_debugLogArray = array();
+        $this->debugLogArray = array();
     }
-
-
 
     /**
      * Get requested params (if needed for keeping the requested URL)
@@ -934,10 +779,10 @@ class tx_cwmobileredirect
         $queryString = (!empty($_SERVER['QUERY_STRING'])) ? $_SERVER['QUERY_STRING'] : http_build_query($_GET);
 
         // First guess (Apache only, no IIS)
-        if(!empty($_SERVER['REQUEST_URI'])) {
+        if (!empty($_SERVER['REQUEST_URI'])) {
             $this->requestParams = $_SERVER['REQUEST_URI'];
             // I hope this is working, should work on IIS
-        } else if(!empty($_SERVER['REDIRECT_SCRIPT_URL'])) {
+        } elseif (!empty($_SERVER['REDIRECT_SCRIPT_URL'])) {
             $this->requestParams = $_SERVER['REDIRECT_SCRIPT_URL'] . $queryString;
             // Fallback
         } else {
@@ -945,7 +790,7 @@ class tx_cwmobileredirect
         }
 
         $this->debugLog("----------- SERVER BEGIN -----------");
-        $this->debugLog(print_r($_SERVER,1));
+        $this->debugLog(print_r($_SERVER, 1));
         $this->debugLog("----------- SERVER END -----------");
 
         $this->debugLog("Requested params: " . $this->requestParams);
