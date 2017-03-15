@@ -321,7 +321,7 @@ class Main
         }
 
         // here the real detection begins
-        if ($this->detectMobile() && $this->conf['redirection_enabled']) {
+        if ($this->conf['redirection_enabled'] && !$this->isStandardAccepted() && $this->detectMobile()) {
             $this->redirectToMobileUrl(false);
         }
 
@@ -445,8 +445,13 @@ class Main
     {
         if ($this->conf['use_cookie']) {
             $this->debugLog('Setting cookie', array('cookie_value' => $cookieValue));
-
-            return setcookie($this->conf['cookie_name'], $cookieValue, time()+$this->conf['cookie_lifetime'], "/");
+            return setcookie(
+                $this->conf['cookie_name'], 
+                $cookieValue, 
+                time()+$this->conf['cookie_lifetime'], 
+                "/", // path
+                trim($this->conf['cookie_domain']) // domain
+            );
         } else {
             return false;
         }
@@ -474,7 +479,7 @@ class Main
 
     /**
      * Determine if the standard mode is forced
-     * (checks Cookie and GET params)
+     * (checks GET params)
      *
      * @return boolean - true if standard mode is forced, false otherwise
      *
@@ -486,12 +491,7 @@ class Main
         $this->debugLog(print_r($_GET, 1));
         $this->debugLog("--------------- isStandardForced END ----------------------");
 
-        return ((isset($_COOKIE[$this->conf['cookie_name']]) &&
-                $_COOKIE[$this->conf['cookie_name']] == self::MOBILEREDIRECT_COOKIE_STANDARD &&
-                !isset($_GET[$this->conf['is_mobile_name']])) ||
-            (!empty($this->conf['no_mobile_name']) && isset($_GET[$this->conf['no_mobile_name']])))
-            ? true
-            : false;
+        return (!empty($this->conf['no_mobile_name']) && isset($_GET[$this->conf['no_mobile_name']])) ? true : false;
     }
 
     /**
@@ -507,12 +507,30 @@ class Main
         $this->debugLog(print_r($_GET, 1));
         $this->debugLog("--------------- isMobileForced END ----------------------");
 
-        return ((isset($_COOKIE[$this->conf['cookie_name']]) &&
-                $_COOKIE[$this->conf['cookie_name']] == self::MOBILEREDIRECT_COOKIE_MOBILE &&
-                !isset($_GET[$this->conf['no_mobile_name']])) ||
-            (!empty($this->conf['is_mobile_name']) && isset($_GET[$this->conf['is_mobile_name']])))
-            ? true
-            : false;
+        return (!empty($this->conf['is_mobile_name']) && isset($_GET[$this->conf['is_mobile_name']])) ? true : false;
+    }
+
+
+
+    /**
+     * Determine if the standard mode is accepted
+     * (checks Cookie)
+     *
+     * @return boolean - true if the standard is forced OR a standard cookie is set
+     */
+    public function isStandardAccepted()
+    {
+        $this->debugLog("--------------- isMobileAccepted BEGIN  ----------------------");
+        $this->debugLog(print_r($_COOKIE,1));
+        $this->debugLog("--------------- isMobileAccepted END ----------------------");
+
+        return 
+            $this->isStandardForced()
+            || (
+                !$this->isMobileForced()
+                && ((isset($_COOKIE[$this->conf['cookie_name']]) && $_COOKIE[$this->conf['cookie_name']] == self::MOBILEREDIRECT_COOKIE_STANDARD))
+            )
+        ;
     }
 
     /**

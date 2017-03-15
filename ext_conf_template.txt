@@ -16,6 +16,9 @@ cookie_name = tx_cwmobileredirect
 # cat=basic; type=text; label=Cookie lifetime:Seconds until the Cookie expires
 cookie_lifetime = 3600
 
+# cat=basic; type=text; label=Cookie domain:Domain for which the cookie will be valid. Defaults to hostname.
+cookie_domain = 
+
 # cat=basic; type=text; label=is mobile GET name:GET-Parameter to force mobile version (e.g. www.domain.com?isMobile)
 is_mobile_name = isMobile
 

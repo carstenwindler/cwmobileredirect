@@ -4,6 +4,11 @@
 		- No features added, support for Typo3 4.x dropped. Please use version 1.4.4 if you still use 4.x!
 		- However some renaming took place
 
+2014-12-03 Hannes Lau <office@hanneslau.de>
+	* Prepare for next release
+        - A standard cookie will not force a redirect from the mobile to the standard version anymore. Instead the cookies just serve to prevent an automatic redirection from standard to mobile. 
+        - Allow to configure the cookie domain
+
 2014-09-29 Carsten Windler  <carsten@carstenwindler.de>
 	* Version 1.4.4 released:
 		- Feature #61801: Ensure compatibility with Typo3 6.2.x
